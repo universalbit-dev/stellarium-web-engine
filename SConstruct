@@ -107,7 +107,6 @@ env.Append(CCFLAGS=['-Wno-initializer-overrides'])
 env.Append(CCFLAGS='-DNO_LIBCURL')
 
 # All the emscripten runtime functions we use.
-# Needed since emscripten 1.37.
 extra_exported = [
     'ALLOC_NORMAL',
     'GL',
@@ -129,42 +128,39 @@ extra_exported = [
 ]
 extra_exported = ','.join("'%s'" % x for x in extra_exported)
 
-flags = [
-         '-s', 'MODULARIZE=1', '-s', 'EXPORT_NAME=StelWebEngine',
-         '-s', 'ALLOW_MEMORY_GROWTH=1',
-         '-s', 'ALLOW_TABLE_GROWTH=1',
-         '--pre-js', 'src/js/pre.js',
-         '--pre-js', 'src/js/obj.js',
-         '--pre-js', 'src/js/geojson.js',
-         '--pre-js', 'src/js/canvas.js',
-         # '-s', 'STRICT=1', # Note: to put back once we switch to emsdk 2
-         '-s', 'RESERVED_FUNCTION_POINTERS=10',
-         '-O3',
-         '-s', 'USE_WEBGL2=1',
-         '-s', 'NO_EXIT_RUNTIME=1',
-         '-s', '"EXPORTED_FUNCTIONS=[]"',
-         '-s', '"EXTRA_EXPORTED_RUNTIME_METHODS=[%s]"' % extra_exported,
-         '-s', 'FILESYSTEM=0'
-        ]
-
-#if env['mode'] not in ['profile', 'debug']:
-#    flags += ['--closure', '1']
+emscripten_linkflags = [
+    '-s', 'MODULARIZE=1',
+    '-s', 'EXPORT_NAME=StelWebEngine',
+    '-s', 'ALLOW_MEMORY_GROWTH=1',
+    '-s', 'ALLOW_TABLE_GROWTH=1',
+    '--pre-js', 'src/js/pre.js',
+    '--pre-js', 'src/js/obj.js',
+    '--pre-js', 'src/js/geojson.js',
+    '--pre-js', 'src/js/canvas.js',
+    '-s', 'RESERVED_FUNCTION_POINTERS=10',
+    '-O3',
+    '-s', 'USE_WEBGL2=1',
+    '-s', 'NO_EXIT_RUNTIME=1',
+    '-s', '"EXPORTED_FUNCTIONS=[]"',
+    '-s', '"EXPORTED_RUNTIME_METHODS=[%s]"' % extra_exported,
+    '-s', 'FILESYSTEM=0'
+]
 
 if env['mode'] in ['profile', 'debug']:
-    flags += [
+    emscripten_linkflags += [
         '--profiling',
         '-s', 'ASM_JS=2', # Removes 'use asm'.
     ]
 
 if env['mode'] == 'debug':
-    flags += ['-s', 'SAFE_HEAP=1', '-s', 'ASSERTIONS=1',
+    emscripten_linkflags += ['-s', 'SAFE_HEAP=1', '-s', 'ASSERTIONS=1',
               '-s', 'WARN_UNALIGNED=1']
 
 if env['es6']:
-    flags += ['-s', 'EXPORT_ES6=1', '-s', 'USE_ES6_IMPORT_META=0']
+    emscripten_linkflags += ['-s', 'EXPORT_ES6=1', '-s', 'USE_ES6_IMPORT_META=0']
 
-env.Append(CCFLAGS=['-DNO_ARGP', '-DGLES2 1'] + flags)
-env.Append(LINKFLAGS=flags)
+# DO NOT put these in CCFLAGS!
+env.Append(LINKFLAGS=emscripten_linkflags)
 env.Append(LIBS=['GL'])
 
 prog = env.Program(target='build/stellarium-web-engine.js', source=sources)
