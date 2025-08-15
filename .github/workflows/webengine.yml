@@ -1,4 +1,4 @@
-name: Build WASM
+name: Build WebEngine (WASM)
 
 on:
   push:
@@ -7,13 +7,16 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  build-wasm:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y scons
-      - name: Setup emsdk and Build WASM
+        run: sudo apt-get update && sudo apt-get install -y scons python3 make
+
+      - name: Setup emsdk
         shell: bash
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
@@ -22,4 +25,7 @@ jobs:
           ./emsdk activate latest
           source ./emsdk_env.sh
           cd ..
-          make js
+
+      - name: Build WASM
+        shell: bash
+        run: make js
