@@ -1,11 +1,12 @@
 steps:
   - uses: actions/checkout@v3
-  - name: Setup emsdk
+  - name: Setup emsdk and Build WASM
+    shell: bash
     run: |
       git clone https://github.com/emscripten-core/emsdk.git
       cd emsdk
       ./emsdk install latest
       ./emsdk activate latest
       source ./emsdk_env.sh
-  - name: Build WASM
-    run: make js
+      cd ..
+      make js
