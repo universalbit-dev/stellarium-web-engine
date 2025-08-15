@@ -28,10 +28,10 @@ jobs:
           source ./emsdk_env.sh
           cd ..
 
-      - name: Patch SConstruct for EXPORTED_RUNTIME_METHODS
+      - name: Patch SConstruct for modern Emscripten
         run: sed -i 's/EXTRA_EXPORTED_RUNTIME_METHODS/EXPORTED_RUNTIME_METHODS/g' SConstruct
 
-      - name: Build WASM
+      - name: Build WASM from repo root
         shell: bash
         run: |
           source emsdk/emsdk_env.sh
