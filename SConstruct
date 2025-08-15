@@ -15,7 +15,7 @@ VariantDir('build/ext_src', 'ext_src', duplicate=0)
 env = Environment(variables=vars)
 
 env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE '
-                   '-Wno-missing-braces',
+                   '-Wno-missing-braces -Wno-error=deprecated-non-prototype',
            CXXFLAGS='-Wall -std=gnu++11 -Wno-narrowing '
                     '-Wno-unknown-pragmas -Wno-unused-function')
 
@@ -105,6 +105,7 @@ if not env.GetOption('clean'):
 # Clang does not like overrided initializers.
 env.Append(CCFLAGS=['-Wno-initializer-overrides'])
 env.Append(CCFLAGS='-DNO_LIBCURL')
+env.Append(CCFLAGS=['-DNO_ARGP', '-DGLES2 1'])
 
 # All the emscripten runtime functions we use.
 extra_exported = [
@@ -159,7 +160,7 @@ if env['mode'] == 'debug':
 if env['es6']:
     emscripten_linkflags += ['-s', 'EXPORT_ES6=1', '-s', 'USE_ES6_IMPORT_META=0']
 
-# DO NOT put these in CCFLAGS!
+# Only linker flags here!
 env.Append(LINKFLAGS=emscripten_linkflags)
 env.Append(LIBS=['GL'])
 
