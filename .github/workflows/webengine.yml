@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y scons python3 make
 
-      - name: Setup emsdk
+      - name: Setup emsdk and Build WASM
         shell: bash
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
@@ -25,7 +25,4 @@ jobs:
           ./emsdk activate latest
           source ./emsdk_env.sh
           cd ..
-
-      - name: Build WASM
-        shell: bash
-        run: make js
+          make js
