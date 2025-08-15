@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y scons python3 make
 
-      - name: Setup emsdk and Build WASM
+      - name: Setup emsdk
         shell: bash
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
@@ -25,4 +25,12 @@ jobs:
           ./emsdk activate latest
           source ./emsdk_env.sh
           cd ..
+
+      - name: Patch SConstruct for EXPORTED_RUNTIME_METHODS
+        run: sed -i 's/EXTRA_EXPORTED_RUNTIME_METHODS/EXPORTED_RUNTIME_METHODS/g' SConstruct
+
+      - name: Build WASM
+        shell: bash
+        run: |
+          source emsdk/emsdk_env.sh
           make js
