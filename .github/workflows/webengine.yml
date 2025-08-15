@@ -1,8 +1,11 @@
 steps:
   - uses: actions/checkout@v3
+  - name: Install dependencies
+    run: sudo apt-get update && sudo apt-get install -y python3 cmake build-essential
   - name: Setup emsdk and Build WASM
     shell: bash
     run: |
+      set -x
       git clone https://github.com/emscripten-core/emsdk.git
       cd emsdk
       ./emsdk install latest
