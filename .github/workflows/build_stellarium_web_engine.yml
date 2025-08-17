@@ -24,15 +24,27 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential python3
 
+    - name: Create build directories
+      run: |
+        mkdir -p build/ext_src/erfa
+        mkdir -p build/ext_src/inih
+        mkdir -p build/ext_src/json
+        mkdir -p build/ext_src/md4c
+        mkdir -p build/ext_src/nanovg
+
     - name: Build (compile objects)
       run: |
-        # Compile object files WITHOUT linker flags
         emcc -c ext_src/erfa/erfa.c -o build/ext_src/erfa/erfa.o -Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE -Wno-missing-braces -DHAVE_UNISTD_H -DMD4C_USE_UTF8 -Werror -DNDEBUG -include config.h -Wno-initializer-overrides -DNO_LIBCURL -DNO_ARGP -DGLES2=1 -O3 -s USE_WEBGL2=1 -s NO_EXIT_RUNTIME=1 -s FILESYSTEM=0 -Isrc -Iext_src/erfa -Iext_src/json -Iext_src/uthash -Iext_src/stb -Iext_src/zlib -Iext_src/inih -Iext_src/nanovg -Iext_src/md4c -Iext_src/webp -Iext_src/webp/src
-        # Repeat for all other source files...
+        emcc -c ext_src/inih/ini.c -o build/ext_src/inih/ini.o [same flags as above]
+        emcc -c ext_src/json/json-builder.c -o build/ext_src/json/json-builder.o [same flags as above]
+        emcc -c ext_src/json/json.c -o build/ext_src/json/json.o [same flags as above]
+        emcc -c ext_src/md4c/entity.c -o build/ext_src/md4c/entity.o [same flags as above]
+        emcc -c ext_src/md4c/md4c-html.c -o build/ext_src/md4c/md4c-html.o [same flags as above]
+        emcc -c ext_src/md4c/md4c.c -o build/ext_src/md4c/md4c.o [same flags as above]
+        emcc -c ext_src/nanovg/nanovg.c -o build/ext_src/nanovg/nanovg.o [same flags as above]
 
     - name: Link (create final .js/.wasm)
       run: |
-        # Link object files and ADD linker flags here
         emcc \
           build/ext_src/erfa/erfa.o \
           build/ext_src/inih/ini.o \
@@ -63,4 +75,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: stellarium-web-engine
-        path: build/stellarium-web-engine.js
+        path: |
+          build/stellarium-web-engine.js
+          build/stellarium-web-engine.wasm
