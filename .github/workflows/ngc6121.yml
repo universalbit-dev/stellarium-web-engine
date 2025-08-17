@@ -1,0 +1,50 @@
+name: Download Gaia Data for NGC 6121
+
+on:
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  download-gaia-ngc6121:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install astroquery
+        run: pip install astroquery
+
+      - name: Download Gaia data for NGC 6121
+        run: |
+          python <<EOF
+          from astroquery.gaia import Gaia
+
+          # NGC 6121 (Messier 4) coordinates
+          ra = 245.8958333  # degrees
+          dec = -26.525  # degrees
+          radius = 0.5   # degrees (30 arcmin)
+
+          adql = f"""
+          SELECT TOP 10000 *
+          FROM gaiadr3.gaia_source
+          WHERE CONTAINS(
+            POINT('ICRS', ra, dec),
+            CIRCLE('ICRS', {ra}, {dec}, {radius})
+          )=1
+          """
+
+          job = Gaia.launch_job(adql)
+          results = job.get_results()
+          results.write('ngc6121_gaia.csv', format='csv', overwrite=True)
+          EOF
+
+      - name: Upload Gaia data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ngc6121_gaia_data
+          path: ngc6121_gaia.csv
