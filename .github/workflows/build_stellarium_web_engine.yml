@@ -1,0 +1,66 @@
+name: Build Stellarium Web Engine
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Emscripten
+      uses: mymindstorm/setup-emsdk@v13
+      with:
+        version: 'latest'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3
+
+    - name: Build (compile objects)
+      run: |
+        # Compile object files WITHOUT linker flags
+        emcc -c ext_src/erfa/erfa.c -o build/ext_src/erfa/erfa.o -Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE -Wno-missing-braces -DHAVE_UNISTD_H -DMD4C_USE_UTF8 -Werror -DNDEBUG -include config.h -Wno-initializer-overrides -DNO_LIBCURL -DNO_ARGP -DGLES2=1 -O3 -s USE_WEBGL2=1 -s NO_EXIT_RUNTIME=1 -s FILESYSTEM=0 -Isrc -Iext_src/erfa -Iext_src/json -Iext_src/uthash -Iext_src/stb -Iext_src/zlib -Iext_src/inih -Iext_src/nanovg -Iext_src/md4c -Iext_src/webp -Iext_src/webp/src
+        # Repeat for all other source files...
+
+    - name: Link (create final .js/.wasm)
+      run: |
+        # Link object files and ADD linker flags here
+        emcc \
+          build/ext_src/erfa/erfa.o \
+          build/ext_src/inih/ini.o \
+          build/ext_src/json/json-builder.o \
+          build/ext_src/json/json.o \
+          build/ext_src/md4c/entity.o \
+          build/ext_src/md4c/md4c-html.o \
+          build/ext_src/md4c/md4c.o \
+          build/ext_src/nanovg/nanovg.o \
+          -o build/stellarium-web-engine.js \
+          -s MODULARIZE=1 \
+          -s EXPORT_NAME=StelWebEngine \
+          -s ALLOW_MEMORY_GROWTH=1 \
+          -s ALLOW_TABLE_GROWTH=1 \
+          --pre-js src/js/pre.js \
+          --pre-js src/js/obj.js \
+          --pre-js src/js/geojson.js \
+          --pre-js src/js/canvas.js \
+          -s RESERVED_FUNCTION_POINTERS=10 \
+          -O3 \
+          -s USE_WEBGL2=1 \
+          -s NO_EXIT_RUNTIME=1 \
+          -s "EXPORTED_FUNCTIONS=[]" \
+          -s "EXPORTED_RUNTIME_METHODS=['ALLOC_NORMAL','GL','UTF8ToString','_free','_malloc','addFunction','allocate','ccall','cwrap','getValue','intArrayFromString','lengthBytesUTF8','removeFunction','setValue','stringToUTF8','writeAsciiToMemory','writeArrayToMemory']" \
+          -s FILESYSTEM=0
+
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: stellarium-web-engine
+        path: build/stellarium-web-engine.js
